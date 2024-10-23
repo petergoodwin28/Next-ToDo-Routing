@@ -1,101 +1,107 @@
-import Image from "next/image";
+"use client";
+
+import Header from "./Header";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  // Custom Type -----------------------------------------------
+  type Todo = {
+    text: string;
+    id: number;
+  };
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Variables -------------------------------------------------
+  const [todo, setToDo] = useState(""); // Controlled input for the todo text
+  const [elements, setElements] = useState<Todo[]>([]); // Start with an empty array for todos
+
+  // Effects ---------------------------------------------------
+  // Load todos from localStorage on initial load
+  useEffect(() => {
+    const savedTodos = localStorage.getItem("todos");
+    console.log("Todods: ", savedTodos);
+
+    if (savedTodos) {
+      setElements(JSON.parse(savedTodos)); // Parse the stored string and set it in elements state
+    }
+
+    //console.log("Retrieved todos: ", savedTodos);
+  }, []); // Empty dependency array ensures this runs only on initial render
+
+  // Save todos to localStorage whenever elements change
+  useEffect(() => {
+    if (elements.length > 0) {
+      localStorage.setItem("todos", JSON.stringify(elements)); // Store elements in localStorage
+      //console.log("Saving todos: ", elements);
+    }
+  }, [elements]); // Run effect when elements state changes
+
+  // Functions --------------------------------------------------
+
+  function updateToDo(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setToDo(e.target.value);
+  }
+
+  function addToDo() {
+    if (todo.trim()) {
+      // Ensure we don't add empty todos
+      setElements([...elements, { text: todo, id: elements.length }]); // Add new todo with unique id
+      setToDo(""); // Clear the input after adding
+    }
+  }
+
+  function clearToDo() {
+    // Clear Local Storage
+    localStorage.removeItem("todos");
+    // Update elements state
+    setElements([]);
+  }
+
+
+  // Return ----------------------------------------------------
+
+  return (
+    <div id="home">
+      <Header />
+
+      <div className="flex flex-col border m-4 p-6 items-center ">
+        <textarea
+          value={todo}
+          onChange={updateToDo}
+          className="border border-white resize-none bg-black h-24 w-4/5 mt-2 mr-auto ml-auto text-white placeholder:text-neutral-400"
+          placeholder="Add Your Todo"
+        />
+
+        <button
+          className="border border-white p-5 m-10 w-10/12 hover:bg-white hover:text-black transition-colors duration-500"
+          onClick={addToDo}
+        >
+          Add ToDo
+        </button>
+
+        <div className="flex items-center justify-evenly flex-wrap gap-y-0 gap-x-0 w-full">
+          {elements.map((element) => (
+            <div
+              className="border border-white p-10 m-10 hover:bg-white hover:text-black transition-colors duration-300 flex-grow"
+              key={element.id} // Use unique id
+            >
+              <Link href={`/todo/${element.id}?text=${element.text}`}>
+                {element.text}
+              </Link>{" "}
+              {/* Display the todo text */}
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+
+      <div className="flex justify-center">
+        <button
+          className="border border-white p-4 hover:text-black hover:bg-white transition-colors duration-1000"
+          onClick={clearToDo}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Clear Todos
+        </button>
+      </div>
     </div>
   );
 }
